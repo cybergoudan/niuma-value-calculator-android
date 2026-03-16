@@ -1,4 +1,4 @@
-package com.cybergoudan.niuma.ui
+package com.cybergoudan.niuma.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,21 +33,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
   val scope = rememberCoroutineScope()
 
   val s by AppSettings.snapshotFlow(context).collectAsState(
-    initial = AppSettings.Snapshot(
-      hourlyRate = 150.0,
-      dailyThresholdMin = 120,
-      notifyEnabled = true,
-      enableDouyin = true,
-      enableKuaishou = false,
-      enableBilibili = false,
-      enableWeibo = false,
-      enableXhs = false,
-      todayMinutes = 0,
-      todayCost = 0.0,
-      todayText = "",
-      lastNotifiedMin = 0,
-    )
-  )
+    initial = com.cybergoudan.niuma.presentation.state.DefaultSnapshot)
 
   Column(
     modifier = modifier

@@ -23,13 +23,7 @@ class UsagePollWorker(
       return Result.success()
     }
 
-    val monitored = buildSet {
-      if (s.enableDouyin) add(PKG_DOUYIN)
-      if (s.enableKuaishou) add(PKG_KUAISHOU)
-      if (s.enableBilibili) add(PKG_BILIBILI)
-      if (s.enableWeibo) add(PKG_WEIBO)
-      if (s.enableXhs) add(PKG_XHS)
-    }
+    val monitored = com.cybergoudan.niuma.domain.usecase.GetEnabledPackagesUseCase.invoke(s)
 
     val usage = UsageCalculator.calcTodayForegroundMillis(ctx, monitored)
     val minutes = (usage.totalMillis / 60000.0).roundToInt()
@@ -60,16 +54,5 @@ class UsagePollWorker(
     val costInt = cost.roundToInt()
     val rateInt = hourlyRate.roundToInt()
     return "你的时间价值：1小时≈${rateInt}元\n你今天娱乐 ${timeStr}，约烧掉 ${costInt} 元。"
-  }
-
-  companion object {
-    const val UNIQUE_WORK_NAME = "usage_poll"
-
-    // Common package names (may vary by region/channel)
-    const val PKG_DOUYIN = "com.ss.android.ugc.aweme"
-    const val PKG_KUAISHOU = "com.smile.gifmaker"
-    const val PKG_BILIBILI = "tv.danmaku.bili"
-    const val PKG_WEIBO = "com.sina.weibo"
-    const val PKG_XHS = "com.xingin.xhs"
   }
 }

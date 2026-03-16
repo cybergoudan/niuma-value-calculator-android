@@ -4,6 +4,7 @@
   <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
 
   <application
+      android:name=".NiuMaApplication"
       android:allowBackup="true"
       android:label="牛马价值计算器"
       android:icon="@mipmap/ic_launcher"

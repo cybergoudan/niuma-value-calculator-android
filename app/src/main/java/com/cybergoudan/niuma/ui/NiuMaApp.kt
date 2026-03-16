@@ -1,4 +1,4 @@
-package com.cybergoudan.niuma.ui
+package com.cybergoudan.niuma.presentation
 
 import android.content.Context
 import androidx.compose.foundation.layout.padding
@@ -20,16 +20,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.cybergoudan.niuma.worker.UsagePollScheduler
+import com.cybergoudan.niuma.presentation.screens.OverviewScreen
+import com.cybergoudan.niuma.presentation.screens.SettingsScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NiuMaApp() {
   val context = LocalContext.current
-
-  // ensure periodic worker scheduled
-  UsagePollScheduler.ensureScheduled(context)
-
   var tab by remember { mutableIntStateOf(0) }
 
   Scaffold(
