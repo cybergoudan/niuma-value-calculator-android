@@ -2,6 +2,8 @@
 
   <!-- UsageStats 需要用户在系统设置里手动授予“使用情况访问权限” -->
   <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+  <!-- Needed to list installed apps on Android 11+ (package visibility). Remove or restrict before publishing. -->
+  <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
   <application
       android:name=".NiuMaApplication"

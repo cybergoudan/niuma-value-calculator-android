@@ -50,7 +50,6 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     .asSequence()
     .filter { if (hideSystem) !it.isSystemApp else true }
     .filter { if (query.isBlank()) true else it.label.contains(query, ignoreCase = true) || it.packageName.contains(query, ignoreCase = true) }
-    .take(300) // keep UI fast
     .toList()
 
   Column(
@@ -122,7 +121,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(8.dp))
         Text(
-          "已选择：${s.monitoredPackages.size} 个",
+          "可见应用：${filtered.size} 个 · 已选择：${s.monitoredPackages.size} 个",
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant
         )
