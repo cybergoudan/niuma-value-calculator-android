@@ -14,6 +14,11 @@ class UsagePollWorker(
   params: WorkerParameters
 ) : CoroutineWorker(appContext, params) {
 
+  companion object {
+    /** Name for unique periodic WorkManager schedule. */
+    const val UNIQUE_WORK_NAME = "usage_poll"
+  }
+
   override suspend fun doWork(): Result {
     val ctx = applicationContext
     val s = AppSettings.snapshotFlow(ctx).first()
