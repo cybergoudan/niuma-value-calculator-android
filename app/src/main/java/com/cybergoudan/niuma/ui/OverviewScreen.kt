@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,81 +18,113 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cybergoudan.niuma.data.AppSettings
 import com.cybergoudan.niuma.data.UsageAccess
+import com.cybergoudan.niuma.presentation.share.PosterShare
+import com.cybergoudan.niuma.presentation.state.DefaultSnapshot
 import com.cybergoudan.niuma.worker.UsagePollScheduler
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
 fun OverviewScreen(modifier: Modifier = Modifier) {
   val context = LocalContext.current
-  val s by AppSettings.snapshotFlow(context).collectAsState(
-    initial = com.cybergoudan.niuma.presentation.state.DefaultSnapshot)
+  val scope = rememberCoroutineScope()
 
-  Column(
+  val s by AppSettings.snapshotFlow(context).collectAsState(initial = DefaultSnapshot)
+
+  val hasAccess = UsageAccess.hasUsageAccess(context)
+
+  // Auto-open permission settings once (no button on home).
+  LaunchedEffect(hasAccess, s.usageAccessPrompted) {
+    if (!hasAccess && !s.usageAccessPrompted) {
+      AppSettings.setUsageAccessPrompted(context, true)
+      openUsageAccessSettings(context)
+    }
+  }
+
+  Box(
     modifier = modifier
       .fillMaxSize()
-      .padding(16.dp),
-    verticalArrangement = Arrangement.spacedBy(12.dp)
+      .padding(18.dp),
+    contentAlignment = Alignment.Center
   ) {
-    val hasAccess = UsageAccess.hasUsageAccess(context)
+    Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+      Text(
+        "今日娱乐成本",
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+      )
 
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
-      Column(Modifier.padding(14.dp)) {
-        Text("自动统计状态", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(6.dp))
-        Text(
-          if (hasAccess) "已授权 Usage Access（自动挡已开启）" else "未授权 Usage Access：请在系统\"使用情况访问\"里找到『牛马价值计算器』并打开",
-          color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(Modifier.height(10.dp))
-        Button(onClick = { openUsageAccessSettings(context) }) {
-          Text("打开授权页面")
-        }
-      }
-    }
+      val cost = s.todayCost.roundToInt()
+      Text(
+        "¥ $cost",
+        style = MaterialTheme.typography.displayMedium,
+        fontWeight = FontWeight.SemiBold
+      )
 
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
-      Column(Modifier.padding(14.dp)) {
-        Text("今日娱乐时长", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(6.dp))
-        val h = s.todayMinutes / 60
-        val m = s.todayMinutes % 60
-        Text(
-          if (h > 0) "${h}小时${m}分钟" else "${m}分钟",
-          style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-          "折算成本：≈ ${s.todayCost.roundToInt()} 元（按 ${s.hourlyRate.roundToInt()} 元/小时）",
-          color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(Modifier.height(10.dp))
-        Button(onClick = { UsagePollScheduler.runOnceNow(context) }) {
-          Text("立即刷新")
-        }
-      }
-    }
+      val h = s.todayMinutes / 60
+      val m = s.todayMinutes % 60
+      Text(
+        if (h > 0) "娱乐时长：${h}小时${m}分钟" else "娱乐时长：${m}分钟",
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+      )
 
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
-      Column(Modifier.padding(14.dp)) {
-        Text("一键复制文案", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(6.dp))
-        Text(
-          if (s.todayText.isBlank()) "先点『立即刷新』生成文案" else s.todayText,
-          color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(Modifier.height(10.dp))
-        Button(
-          enabled = s.todayText.isNotBlank(),
-          onClick = { copyToClipboard(context, s.todayText) }
+      Text(
+        "时间价值：1小时≈${s.hourlyRate.roundToInt()}元",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+      )
+
+      Spacer(Modifier.height(6.dp))
+
+      Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+      ) {
+        Column(
+          modifier = Modifier.padding(14.dp),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-          Text("复制")
+          Text(
+            when {
+              !hasAccess -> "需要在系统『使用情况访问』中授权（已自动打开一次）"
+              s.monitoredPackages.isEmpty() -> "先去设置里选择要统计的 App"
+              else -> "已开启自动统计，可点击刷新"
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+          )
+
+          Button(onClick = { UsagePollScheduler.runOnceNow(context) }) {
+            Text("立即刷新")
+          }
+
+          Button(
+            enabled = s.todayText.isNotBlank(),
+            onClick = { copyToClipboard(context, s.todayText) }
+          ) {
+            Text("复制文案")
+          }
+
+          Button(
+            onClick = { PosterShare.sharePoster(context, s) }
+          ) {
+            Text("分享海报")
+          }
         }
       }
     }

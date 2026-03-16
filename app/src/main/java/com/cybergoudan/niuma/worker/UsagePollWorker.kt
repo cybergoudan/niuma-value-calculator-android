@@ -24,11 +24,15 @@ class UsagePollWorker(
     val s = AppSettings.snapshotFlow(ctx).first()
 
     if (!UsageAccess.hasUsageAccess(ctx)) {
-      // no permission: keep computed values but don't fail
       return Result.success()
     }
 
-    val monitored = com.cybergoudan.niuma.domain.usecase.GetEnabledPackagesUseCase.invoke(s)
+    // If user hasn't selected apps yet, do nothing (avoid surprising stats).
+    val monitored = s.monitoredPackages
+    if (monitored.isEmpty()) {
+      AppSettings.writeComputedToday(ctx, minutes = 0, cost = 0.0, text = "")
+      return Result.success()
+    }
 
     val usage = UsageCalculator.calcTodayForegroundMillis(ctx, monitored)
     val minutes = (usage.totalMillis / 60000.0).roundToInt()
@@ -38,7 +42,6 @@ class UsagePollWorker(
     AppSettings.writeComputedToday(ctx, minutes = minutes, cost = cost, text = text)
 
     if (s.notifyEnabled && s.dailyThresholdMin > 0 && minutes >= s.dailyThresholdMin) {
-      // avoid spamming: only notify when crossing a new 10-min boundary beyond last notified
       if (minutes - s.lastNotifiedMin >= 10) {
         Notifier.notify(
           ctx,
@@ -58,6 +61,6 @@ class UsagePollWorker(
     val timeStr = if (h > 0) "${h}小时${m}分钟" else "${m}分钟"
     val costInt = cost.roundToInt()
     val rateInt = hourlyRate.roundToInt()
-    return "你的时间价值：1小时≈${rateInt}元\n你今天娱乐 ${timeStr}，约烧掉 ${costInt} 元。"
+    return "牛马价值计算器APP\n你的时间价值：1小时≈${rateInt}元\n你今天娱乐 ${timeStr}，约烧掉 ${costInt} 元。"
   }
 }
