@@ -46,7 +46,7 @@ fun OverviewScreen(modifier: Modifier = Modifier) {
         Text("自动统计状态", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(6.dp))
         Text(
-          if (hasAccess) "已授权 Usage Access（自动挡已开启）" else "未授权 Usage Access：请在系统"使用情况访问"里找到『牛马价值计算器』并打开",
+          if (hasAccess) "已授权 Usage Access（自动挡已开启）" else "未授权 Usage Access：请在系统\"使用情况访问\"里找到『牛马价值计算器』并打开",
           color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(10.dp))
