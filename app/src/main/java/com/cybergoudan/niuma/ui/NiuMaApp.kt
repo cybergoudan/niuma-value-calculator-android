@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun NiuMaApp() {
+  val context = LocalContext.current
+
   Column(
     modifier = Modifier
       .fillMaxSize()
@@ -43,11 +45,11 @@ fun NiuMaApp() {
         Text("自动挡：Usage Access 权限", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(6.dp))
         Text(
-          "状态：${if (hasUsageAccess(LocalContext.current)) "已授权" else "未授权"}",
+          "状态：${if (hasUsageAccess(context)) "已授权" else "未授权"}",
           color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(10.dp))
-        Button(onClick = { openUsageAccessSettings(LocalContext.current) }) {
+        Button(onClick = { openUsageAccessSettings(context) }) {
           Text("去系统设置授权")
         }
       }
